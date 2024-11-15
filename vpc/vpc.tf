@@ -9,7 +9,6 @@ resource "aws_vpc" "generic_vpc" {
 
 
 # Note-1
-# resource "aws_vpc" 
-# This name should be exactly as it is. Because in HCL lang, it is saying that 
-# create resource named vpc by using the aws provider
+# resource "aws_vpc". This name should be exactly as it is. Because in HCL lang, 
+# it is saying that, create resource named vpc by using the aws provider.
 # generic_vpc is the name of the vpc you are going to create.
