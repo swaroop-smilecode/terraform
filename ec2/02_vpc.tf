@@ -58,6 +58,9 @@ resource "aws_security_group" "dev-vpc-sg" {
   # What is Ingress?
   # Ingress, conversely, pertains to the flow of data into a private network from an external source, 
   # typically the public internet.
+
+  # To allow SSH traffic.
+  # For SSH traffic, default port is 22.
   ingress {
     description = "Allow Port 22"
     from_port   = 22
@@ -66,10 +69,24 @@ resource "aws_security_group" "dev-vpc-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # To allow HTTP traffic.
+  # For HTTP traffic, default port is 80.
   ingress {
     description = "Allow Port 80"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # To allow HTTPS traffic.
+  # For HTTPS traffic, default port is 443.
+  # But, for that you need to setup SSL certificate etc. As of now, 
+  # i am just creating rule in security group, but will do the rest of work later.
+  ingress {
+    description = "Allow Port 80"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

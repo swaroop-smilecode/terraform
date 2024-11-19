@@ -8,4 +8,13 @@ resource "aws_instance" "my-ec2-vm" {
   tags = {
     "Name" = "myec2vm"
   }
+  #user_data = file("apache-install.sh")
+  user_data = <<-EOF
+    #!/bin/bash
+    sudo yum update -y
+    sudo yum install httpd -y
+    sudo systemctl enable httpd
+    sudo systemctl start httpd
+    echo "<h1>Hello, green trees, cool rains</h1>" > /var/www/html/index.html
+    EOF 
 }
