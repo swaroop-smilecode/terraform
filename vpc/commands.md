@@ -1,7 +1,7 @@
 #### Terraform commands to create vpc
 ```python
 terraform init
-terraform plan
+terraform plan # This step can be skipped.
 terraform apply -auto-approve
 ```
 
