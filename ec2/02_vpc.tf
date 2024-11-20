@@ -1,104 +1,117 @@
-# Resources Blocks
-
-# Resource-1: Create VPC
-resource "aws_vpc" "vpc-dev" {
-  cidr_block = "10.0.0.0/16"
+# --------------------------------------
+# Create VPC
+resource "aws_vpc" "custom_vpc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
   tags = {
-    "Name" = "vpc-dev"
+    Name = "yt-vpc"
+  }
+}
+# --------------------------------------
+
+# Create 2 public subnets & 2 private subnets.
+# First i am creating an variable with the values of Availability zones.
+variable "vpc_availability_zones" {
+  type        = list(string)
+  description = "Availability Zones"
+  default     = ["us-east-1a", "us-east-1b"]
+}
+
+# Create 2 public subnets
+# This block executes 2 times & will see what the CIDR block will be for each iteration.
+# cidr_block = "10.0.0.0/16"
+# cidrsubnet("10.0.0.0/16", 8, 0 + 1) => cidrsubnet("10.0.0.0/16", 8, 1) => "10.0.1.0/24"
+# cidrsubnet("10.0.0.0/16", 8, 1 + 1) => cidrsubnet("10.0.0.0/16", 8, 2) => "10.0.2.0/24"
+resource "aws_subnet" "public_subnet" {
+  vpc_id            = aws_vpc.custom_vpc.id
+  count             = length(var.vpc_availability_zones)
+  cidr_block        = cidrsubnet(aws_vpc.custom_vpc.cidr_block, 8, count.index + 1)
+  availability_zone = element(var.vpc_availability_zones, count.index)
+  tags = {
+    Name = "YT Public subnet ${count.index + 1}"
   }
 }
 
-# Resource-2: Create Subnets
-resource "aws_subnet" "vpc-dev-public-subnet-1" {
-  vpc_id            = aws_vpc.vpc-dev.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
-  # When i launch ec2 instance inside this public subnet,
-  # if i need to tell to aws, that you your self assign an random IP address to ec2 server,
-  # this is the way to do so.
-  map_public_ip_on_launch = true
-}
-
-# Resource-3: Internet Gateway
-# If you want an end user to reach your subnet from internet, the subnet should be public subnet.
-# How to make subnet a public subnet?
-# Just attach an Internet gateway to subnet & subnet becomes public subnet.
-resource "aws_internet_gateway" "vpc-dev-igw" {
-  vpc_id = aws_vpc.vpc-dev.id
-}
-
-# Resource-4: Route Table
-resource "aws_route_table" "vpc-dev-public-route-table" {
-  # Route table needs to be associated with subnet, which will do in the next step, but, first of all
-  # you should tell inside which VPC, this route table is getting created. For that purpose, will mention vpc_id
-  vpc_id = aws_vpc.vpc-dev.id
-}
-
-# Resource-5: Associate route Table with the Subnet
-resource "aws_route_table_association" "vpc-dev-public-route-table-associate" {
-  route_table_id = aws_route_table.vpc-dev-public-route-table.id
-  subnet_id      = aws_subnet.vpc-dev-public-subnet-1.id
-}
-
-# Resource-6: Create route in Route Table for Internet Access
-resource "aws_route" "vpc-dev-public-route" {
-  route_table_id         = aws_route_table.vpc-dev-public-route-table.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.vpc-dev-igw.id
-}
-
-# Resource-7: Security Group
-resource "aws_security_group" "dev-vpc-sg" {
-  name        = "dev-vpc-default-sg"
-  description = "Dev VPC Default Security Group"
-  # Again, security group is present inside the VPC, hence we need to associate 
-  # security group with VPC.
-  vpc_id = aws_vpc.vpc-dev.id
-
-  # What is Ingress?
-  # Ingress, conversely, pertains to the flow of data into a private network from an external source, 
-  # typically the public internet.
-
-  # To allow SSH traffic.
-  # For SSH traffic, default port is 22.
-  ingress {
-    description = "Allow Port 22"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # To allow HTTP traffic.
-  # For HTTP traffic, default port is 80.
-  ingress {
-    description = "Allow Port 80"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # To allow HTTPS traffic.
-  # For HTTPS traffic, default port is 443.
-  # But, for that you need to setup SSL certificate etc. As of now, 
-  # i am just creating rule in security group, but will do the rest of work later.
-  ingress {
-    description = "Allow Port 80"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # What is Egress?
-  # Egress refers to the flow of data moving out of a private network into the public internet 
-  # or another external network. 
-  egress {
-    description = "Allow all IP and Ports Outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+# Create 2 private subnets
+# cidr_block = "10.0.0.0/16"
+# cidrsubnet("10.0.0.0/16", 8, 0 + 3) => cidrsubnet("10.0.0.0/16", 8, 1) => "10.0.3.0/24"
+# cidrsubnet("10.0.0.0/16", 8, 1 + 3) => cidrsubnet("10.0.0.0/16", 8, 2) => "10.0.4.0/24"
+resource "aws_subnet" "private_subnet" {
+  vpc_id            = aws_vpc.custom_vpc.id
+  count             = length(var.vpc_availability_zones)
+  cidr_block        = cidrsubnet(aws_vpc.custom_vpc.cidr_block, 8, count.index + 3)
+  availability_zone = element(var.vpc_availability_zones, count.index)
+  tags = {
+    Name = "YT Private subnet ${count.index + 1}"
   }
 }
+# --------------------------------------
+
+# Internet Gateway
+resource "aws_internet_gateway" "igw_vpc" {
+  vpc_id = aws_vpc.custom_vpc.id
+  tags = {
+    Name = "YT-Internet Gateway"
+  }
+}
+# --------------------------------------
+
+# Create route table for public subnets
+resource "aws_route_table" "yt_route_table_public_subnet" {
+  vpc_id = aws_vpc.custom_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"                     # Source
+    gateway_id = aws_internet_gateway.igw_vpc.id # Destination
+  }
+  tags = {
+    Name = " Public subnet Route Table"
+  }
+}
+
+# Route table association with public subnets
+resource "aws_route_table_association" "public_subnet_association" {
+  route_table_id = aws_route_table.yt_route_table_public_subnet.id
+  count          = length(var.vpc_availability_zones)
+  subnet_id      = element(aws_subnet.public_subnet[*].id, count.index)
+}
+# --------------------------------------
+
+# Elastic IP
+resource "aws_eip" "eip" {
+  domain     = "vpc"
+  depends_on = [aws_internet_gateway.igw_vpc] # Internet gateway should present before creating Elastic IP.
+}
+# --------------------------------------
+
+# NAT Gateway
+resource "aws_nat_gateway" "yt-nat-gateway" {
+  subnet_id     = element(aws_subnet.private_subnet[*].id, 0) # Deploying NAT gateway only on first subnet.
+  allocation_id = aws_eip.eip.id
+  depends_on    = [aws_internet_gateway.igw_vpc]
+  tags = {
+    Name = "YT-Nat Gateway"
+  }
+}
+# --------------------------------------
+
+# Route table for Private subnets
+resource "aws_route_table" "yt_route_table_private_subnet" {
+  vpc_id = aws_vpc.custom_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"                       # source
+    gateway_id = aws_nat_gateway.yt-nat-gateway.id # destination
+  }
+  depends_on = [aws_nat_gateway.yt-nat-gateway]
+  tags = {
+    Name = " Private subnet Route Table"
+  }
+}
+
+# Route table association with private subnets
+resource "aws_route_table_association" "private_subnet_association" {
+  route_table_id = aws_route_table.yt_route_table_private_subnet.id
+  count          = length(var.vpc_availability_zones)
+  subnet_id      = element(aws_subnet.private_subnet[*].id, count.index)
+}
+# --------------------------------------
