@@ -26,7 +26,7 @@ resource "aws_security_group" "alb_sg" {
 }
 # ------------------------------------------------------------
 
-# Security Group for EC2 Instances (ALB -> EC2)
+# Security Group for EC2 Instances (load balancer -> Auto scaling group(EC2))
 resource "aws_security_group" "ec2_sg" {
   name        = "yt-ec2-sg"
   description = "Security Group for Web Server Instances"
