@@ -15,3 +15,8 @@ terraform destroy -auto-approve
 rd -r ".terraform*"
 rd -r terraform.tfstate*
 ```
+
+#### Windows commands to clean up files & folders that are created on execution of terraform commands
+```python
+terraform output
+```

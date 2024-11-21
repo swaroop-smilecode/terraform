@@ -91,7 +91,7 @@ resource "aws_lb_listener" "alb_listener" {
 resource "aws_launch_template" "ec2_launch_template" {
   name = "yt-web-server"
 
-  image_id      = "ami-013e83f579886baeb" //Copy the ami id from aws console
+  image_id      = "ami-012967cc5a8c9f891" //Copy the ami id from aws console
   instance_type = "t2.micro"
 
   network_interfaces {
