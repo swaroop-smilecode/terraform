@@ -86,7 +86,7 @@ resource "aws_eip" "eip" {
 
 # NAT Gateway
 resource "aws_nat_gateway" "yt-nat-gateway" {
-  subnet_id     = element(aws_subnet.private_subnet[*].id, 0) # Deploying NAT gateway only on first subnet.
+  subnet_id     = element(aws_subnet.public_subnet[*].id, 0) # Deploying NAT gateway only on first subnet.
   allocation_id = aws_eip.eip.id
   depends_on    = [aws_internet_gateway.igw_vpc]
   tags = {

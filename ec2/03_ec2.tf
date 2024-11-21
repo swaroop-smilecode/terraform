@@ -37,7 +37,7 @@ resource "aws_security_group" "ec2_sg" {
     from_port       = 0
     to_port         = 0
     protocol        = "-1"
-    security_groups = [aws_security_group.alb_sg.id]
+    security_groups = [aws_security_group.alb_sg.id, aws_security_group.bastion_host_sg.id]
   }
 
   egress {
@@ -94,6 +94,8 @@ resource "aws_launch_template" "ec2_launch_template" {
   image_id      = "ami-012967cc5a8c9f891" //Copy the ami id from aws console
   instance_type = "t2.micro"
 
+  key_name = "ec2-key-pair"
+
   network_interfaces {
     associate_public_ip_address = false
     security_groups             = [aws_security_group.ec2_sg.id]
@@ -128,5 +130,46 @@ resource "aws_autoscaling_group" "ec2_asg" {
 
 output "alb_dns_name" {
   value = aws_lb.app_lb.dns_name
+}
+# ------------------------------------------------------------
+
+# Security Group for bastian host (Internet -> bastian host)
+resource "aws_security_group" "bastion_host_sg" {
+  name        = "bastion_host_sg"
+  description = "Security Group for bastion host"
+
+  vpc_id = aws_vpc.custom_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "bastion_host_sg"
+  }
+}
+# ------------------------------------------------------------
+# Bastian host - EC2 Instance
+# To connect to EC2 instance which is launched by auto scaling group.
+resource "aws_instance" "bastion-host" {
+  ami                         = "ami-012967cc5a8c9f891" # Amazon Linux
+  instance_type               = "t2.micro"
+  key_name                    = "ec2-key-pair"
+  subnet_id                   = element(aws_subnet.public_subnet[*].id, 0)
+  vpc_security_group_ids      = [aws_security_group.bastion_host_sg.id]
+  associate_public_ip_address = true
+  tags = {
+    "Name" = "bastion-host"
+  }
 }
 # ------------------------------------------------------------
