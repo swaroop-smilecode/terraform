@@ -15,6 +15,22 @@
     }
   }
   ```
+#### How to know required attribute names for resource type?
+- Terraform official documentation https://developer.hashicorp.com/terraform/docs
+- Click on `Registry`
+- Click on `Browser Providers`
+- Click on `AWS`
+- Click on `Documentation`
+- There will be list of resource types
+
+#### How to create infrastructure?
+Ok, well and good. We wrote an file named `main.tf`(code is written in HCL language) saying which resources need to be created in AWS.</br>
+Now, which terraform commands to be executed to create infrastructure?</br>
+It's 3 step sequential proccess.
+```python
+terraform init --> terraform plan(This step can be skipped) --> terraform apply -auto-approve
+```
+
 #### `terraform.tfstate.backup`
 - Upon execution of `terraform apply` command, a file named `terraform.tfstate.backup` will be created.</br>
 - Once the resources are created inside AWS cloud, terraform stores the details of those recources inside this file.</br>
@@ -24,4 +40,18 @@
   about the resouce such as name, arn, associate_public_ip_address etc.
 - Since this file contains all the information, it's nice to store it inside an secure place.</br>
   Will see about this in hands_on section.
-  
+
+#### How to destroy create infrastructure?
+```python
+terraform destroy -auto-approve
+```
+
+#### How to validate `main.tf` file?
+```python
+terraform validate
+```
+
+#### Exactly at this moment, how many resources are maintained by terraform?
+```python
+terraform state list
+```
